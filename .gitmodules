@@ -1,0 +1,9 @@
+[submodule "dxswap-core"]
+	path = dxswap-core
+	url = git@github.com:levelkdev/dxswap-core.git
+[submodule "dxswap-periphery"]
+	path = dxswap-periphery
+	url = git@github.com:levelkdev/dxswap-periphery.git
+[submodule "swapr-staking-rewards-distribution-contracts"]
+	path = swapr-staking-rewards-distribution-contracts
+	url = git@github.com:luzzif/swapr-staking-rewards-distribution-contracts.git
