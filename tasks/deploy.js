@@ -4,9 +4,14 @@ task(
     "deploy",
     "Deploys the whole contracts suite and optionally verifies source code on Etherscan"
 )
+    .addOptionalParam("dxDaoAvatarAddress", "The DAO's avatar address")
     .addParam(
-        "protocolFeeReceiver",
-        "The address that will receive the protocol fee"
+        "protocolFeeNativeAssetReceiver",
+        "The address that will receive the protocol fee, after it's been converted to the chain's native asset (ETH, xDAI, etc)"
+    )
+    .addParam(
+        "protocolFeeFallbackReceiver",
+        "The address that will receive the protocol fee when it cannot be converted to the chain's native asset"
     )
     .addParam(
         "tokenRegistryAddress",
@@ -16,27 +21,41 @@ task(
         "tokenRegistryListId",
         "The unique identifier of token registry list id used to validate tokens on Swapr"
     )
-    .addParam("wethAddress", "The WETH token address on the chosen network")
+    .addParam(
+        "nativeAssetWrapperAddress",
+        "The address of the contract that wraps the native asset in the target chain"
+    )
     .setAction(async (taskArguments, hre) => {
         const {
-            protocolFeeReceiver,
-            wethAddress,
+            protocolFeeNativeAssetReceiver,
+            protocolFeeFallbackReceiver,
+            nativeAssetWrapperAddress,
             tokenRegistryAddress,
             tokenRegistryListId,
+            dxDaoAvatarAddress,
         } = taskArguments;
         const [accountAddress] = await hre.web3.eth.getAccounts();
 
-        console.log("Using protocol fee receiver:", protocolFeeReceiver);
-        console.log("Using weth:", wethAddress);
+        console.log(
+            "Using native asset protocol fee receiver:",
+            protocolFeeNativeAssetReceiver
+        );
+        console.log(
+            "Using exotic, fallback protocol fee receiver:",
+            protocolFeeFallbackReceiver
+        );
+        console.log("Using native asset wrapper:", nativeAssetWrapperAddress);
+        console.log("Using token registry:", tokenRegistryAddress);
+        console.log("Using token registry list id:", tokenRegistryListId);
         console.log("Using account:", accountAddress);
         console.log();
 
         console.log("Deploying core deployer");
         const CoreDeployer = hre.artifacts.require("DXswapDeployer");
         const coreDeployer = await CoreDeployer.new(
-            protocolFeeReceiver,
+            protocolFeeNativeAssetReceiver,
             accountAddress,
-            wethAddress,
+            nativeAssetWrapperAddress,
             [],
             [],
             []
@@ -65,7 +84,10 @@ task(
         // periphery
         const Router = hre.artifacts.require("DXswapRouter");
         console.log("Deploying router");
-        const router = await Router.new(factoryAddress, wethAddress);
+        const router = await Router.new(
+            factoryAddress,
+            nativeAssetWrapperAddress
+        );
 
         // staking rewards distribution (liquidity mining)
         const DefaultRewardTokensValidator = hre.artifacts.require(
@@ -96,6 +118,9 @@ task(
 
         console.log();
         console.log(`== Core ==`);
+        console.log(
+            `Core deployer deployed at address ${coreDeployer.address}`
+        );
         console.log(`Factory deployed at address ${factoryAddress}`);
         console.log(`Fee setter deployed at address ${feeSetterAddress}`);
         console.log(`Fee receiver deployed at address ${feeReceiverAddress}`);
@@ -111,6 +136,32 @@ task(
             `Stakable token validator deployed at address ${defaultStakableTokenValidator.address}`
         );
         console.log(
-            `Factory deployer at address ${stakingRewardsFactory.address}`
+            `Factory deployed at address ${stakingRewardsFactory.address}`
         );
+
+        if (dxDaoAvatarAddress) {
+            console.log();
+            console.log(
+                "Transferring ownership of the contracts to the given DAO address"
+            );
+
+            // transferring ownership of the contracts to the DAO
+            const FeeReceiver = hre.artifacts.require("DXswapFeeReceiver");
+            const feeReceiverInstance = await FeeReceiver.at(
+                feeReceiverAddress
+            );
+            console.log("Updating protocol fee receivers");
+            await feeReceiverInstance.changeReceivers(
+                protocolFeeNativeAssetReceiver,
+                protocolFeeFallbackReceiver
+            );
+            console.log("Transferring fee receiver ownership");
+            await feeReceiverInstance.transferOwnership(dxDaoAvatarAddress);
+
+            const FeeSetter = hre.artifacts.require("DXswapFeeSetter");
+            const feeSetterInstance = await FeeSetter.at(feeSetterAddress);
+            console.log("Transferring fee setter ownership");
+            await feeSetterInstance.transferOwnership(dxDaoAvatarAddress);
+            console.log("Full ownership correctly transferred to the DAO");
+        }
     });

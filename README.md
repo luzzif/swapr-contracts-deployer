@@ -36,14 +36,16 @@ The following parameters are required for the command to work as expected:
 
 - `--network`: specifies the network on which you want to perform the
   deployment. Valid values are listed in the `hardhat.config.js`.
-- `--protocol-fee-receiver`: specifies the address that will receive the
-  protocol fee.
-- `--token-registry-address`: specifies the address at which the related token
-  registry contract is currently deployed in the target network. Check
-  [this link](https://github.com/nicoelzer/dxDAO-Token-Registry) out for more
-  info.
-- `--token-registry-list-id`: the unique identifier of the token list, registered
-  in the previously passed token registry instance, that will be used by the
-  staking contracts to perform input validation.
-- `--weth-address`: an address at which a WETH-compatible contract is deployed in
-  the targeted network.
+- `--protocol-fee-native-asset-receiver`: the address that will receive the
+  protocol fee, after it's been converted to the chain's native asset (ETH,
+  xDAI, etc).
+- `--protocol-fee-fallback-receiver`: The address that will receive the protocol
+  fee when it cannot be converted to the chain's native asset.
+- `--token-registry-address`: the address of the token registry used on Swapr.
+  Check [this link](https://github.com/nicoelzer/dxDAO-Token-Registry) out for
+  more info.
+- `--token-registry-list-id`: the unique identifier of the token list,
+  registered in the previously passed token registry instance, that will be used
+  by the staking contracts to perform input validation.
+- `--native-asset-wrapper-address`: the address of the contract that wraps the
+  native asset in the target chain.

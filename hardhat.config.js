@@ -13,7 +13,13 @@ module.exports = {
             accounts: [process.env.PRIVATE_KEY],
             gasPrice: 0,
             gas: 1000000000,
-            timeout: 100000
-        }
-    }
+            timeout: 100000,
+        },
+        sokol: {
+            url: "https://sokol.poa.network",
+            accounts: [process.env.PRIVATE_KEY],
+            gasPrice: 1000000000,
+            timeout: 100000,
+        },
+    },
 };
