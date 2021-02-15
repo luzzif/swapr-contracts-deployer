@@ -49,3 +49,6 @@ The following parameters are required for the command to work as expected:
   by the staking contracts to perform input validation.
 - `--native-asset-wrapper-address`: the address of the contract that wraps the
   native asset in the target chain.
+- `--owner-address`: An address that will become the owner of the contracts
+  after deployment. If not specified, the account generated from the passed in
+  private key (i.e. the deployer) will be the owner.

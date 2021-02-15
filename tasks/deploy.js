@@ -4,7 +4,10 @@ task(
     "deploy",
     "Deploys the whole contracts suite and optionally verifies source code on Etherscan"
 )
-    .addOptionalParam("dxDaoAvatarAddress", "The DAO's avatar address")
+    .addOptionalParam(
+        "ownerAddress",
+        "An address that will become the owner of the contracts after deployment. If not specified, the account generated from the passed in private key (i.e. the deployer) will be the owner"
+    )
     .addParam(
         "protocolFeeNativeAssetReceiver",
         "The address that will receive the protocol fee, after it's been converted to the chain's native asset (ETH, xDAI, etc)"
@@ -32,7 +35,7 @@ task(
             nativeAssetWrapperAddress,
             tokenRegistryAddress,
             tokenRegistryListId,
-            dxDaoAvatarAddress,
+            ownerAddress,
         } = taskArguments;
         const [accountAddress] = await hre.web3.eth.getAccounts();
 
@@ -116,6 +119,50 @@ task(
             defaultRewardTokensValidator.address
         );
 
+        if (ownerAddress) {
+            console.log();
+            console.log(
+                "Transferring ownership of the contracts to the given DAO address"
+            );
+
+            // transferring ownership of the contracts to the DAO
+            const FeeReceiver = hre.artifacts.require("DXswapFeeReceiver");
+            const feeReceiverInstance = await FeeReceiver.at(
+                feeReceiverAddress
+            );
+            console.log("Updating protocol fee receivers");
+            await feeReceiverInstance.changeReceivers(
+                protocolFeeNativeAssetReceiver,
+                protocolFeeFallbackReceiver
+            );
+            console.log("Transferring fee receiver ownership");
+            await feeReceiverInstance.transferOwnership(ownerAddress);
+
+            const FeeSetter = hre.artifacts.require("DXswapFeeSetter");
+            const feeSetterInstance = await FeeSetter.at(feeSetterAddress);
+            console.log("Transferring fee setter ownership");
+            await feeSetterInstance.transferOwnership(ownerAddress);
+
+            console.log(
+                "Transferring default reward tokens validator ownership"
+            );
+            await defaultRewardTokensValidator.transferOwnership(ownerAddress);
+
+            console.log(
+                "Transferring default stakable token validator ownership"
+            );
+            await defaultStakableTokenValidator.transferOwnership(ownerAddress);
+
+            console.log(
+                "Transferring ERC20 staking rewards distribution factory validator ownership"
+            );
+            await stakingRewardsFactory.transferOwnership(ownerAddress);
+
+            console.log(
+                "Full ownership correctly transferred to the specified owner address"
+            );
+        }
+
         console.log();
         console.log(`== Core ==`);
         console.log(
@@ -138,30 +185,4 @@ task(
         console.log(
             `Factory deployed at address ${stakingRewardsFactory.address}`
         );
-
-        if (dxDaoAvatarAddress) {
-            console.log();
-            console.log(
-                "Transferring ownership of the contracts to the given DAO address"
-            );
-
-            // transferring ownership of the contracts to the DAO
-            const FeeReceiver = hre.artifacts.require("DXswapFeeReceiver");
-            const feeReceiverInstance = await FeeReceiver.at(
-                feeReceiverAddress
-            );
-            console.log("Updating protocol fee receivers");
-            await feeReceiverInstance.changeReceivers(
-                protocolFeeNativeAssetReceiver,
-                protocolFeeFallbackReceiver
-            );
-            console.log("Transferring fee receiver ownership");
-            await feeReceiverInstance.transferOwnership(dxDaoAvatarAddress);
-
-            const FeeSetter = hre.artifacts.require("DXswapFeeSetter");
-            const feeSetterInstance = await FeeSetter.at(feeSetterAddress);
-            console.log("Transferring fee setter ownership");
-            await feeSetterInstance.transferOwnership(dxDaoAvatarAddress);
-            console.log("Full ownership correctly transferred to the DAO");
-        }
     });
