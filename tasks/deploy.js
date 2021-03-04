@@ -28,6 +28,10 @@ task(
         "nativeAssetWrapperAddress",
         "The address of the contract that wraps the native asset in the target chain"
     )
+    .addFlag(
+        "deployFarming",
+        "Whether or not to deploy farming-related contracts"
+    )
     .setAction(async (taskArguments, hre) => {
         const {
             protocolFeeNativeAssetReceiver,
@@ -36,6 +40,7 @@ task(
             tokenRegistryAddress,
             tokenRegistryListId,
             ownerAddress,
+            deployFarming,
         } = taskArguments;
         const [accountAddress] = await hre.web3.eth.getAccounts();
 
@@ -93,31 +98,38 @@ task(
         );
 
         // staking rewards distribution (liquidity mining)
-        const DefaultRewardTokensValidator = hre.artifacts.require(
-            "DefaultRewardTokensValidator"
-        );
-        console.log("Deploying reward tokens validator");
-        const defaultRewardTokensValidator = await DefaultRewardTokensValidator.new(
-            tokenRegistryAddress,
-            tokenRegistryListId
-        );
-        console.log("Deploying stakable token validator");
-        const DefaultStakableTokenValidator = hre.artifacts.require(
-            "DefaultStakableTokenValidator"
-        );
-        console.log("Deploying staking reward distributions factory");
-        const defaultStakableTokenValidator = await DefaultStakableTokenValidator.new(
-            tokenRegistryAddress,
-            tokenRegistryListId,
-            factoryAddress
-        );
-        const StakingRewardsFactory = hre.artifacts.require(
-            "SwaprERC20StakingRewardsDistributionFactory"
-        );
-        const stakingRewardsFactory = await StakingRewardsFactory.new(
-            defaultRewardTokensValidator.address,
-            defaultRewardTokensValidator.address
-        );
+        let defaultRewardTokensValidator = null;
+        let defaultStakableTokenValidator = null;
+        let stakingRewardsFactory = null;
+        if (deployFarming) {
+            const DefaultRewardTokensValidator = hre.artifacts.require(
+                "DefaultRewardTokensValidator"
+            );
+            console.log("Deploying reward tokens validator");
+            defaultRewardTokensValidator = await DefaultRewardTokensValidator.new(
+                tokenRegistryAddress,
+                tokenRegistryListId
+            );
+            console.log("Deploying stakable token validator");
+            const DefaultStakableTokenValidator = hre.artifacts.require(
+                "DefaultStakableTokenValidator"
+            );
+            console.log("Deploying staking reward distributions factory");
+            defaultStakableTokenValidator = await DefaultStakableTokenValidator.new(
+                tokenRegistryAddress,
+                tokenRegistryListId,
+                factoryAddress
+            );
+            const StakingRewardsFactory = hre.artifacts.require(
+                "SwaprERC20StakingRewardsDistributionFactory"
+            );
+            stakingRewardsFactory = await StakingRewardsFactory.new(
+                defaultRewardTokensValidator.address,
+                defaultRewardTokensValidator.address
+            );
+        } else {
+            console.log("skipping famirng contracts deployment");
+        }
 
         if (ownerAddress) {
             console.log();
@@ -143,20 +155,26 @@ task(
             console.log("Transferring fee setter ownership");
             await feeSetterInstance.transferOwnership(ownerAddress);
 
-            console.log(
-                "Transferring default reward tokens validator ownership"
-            );
-            await defaultRewardTokensValidator.transferOwnership(ownerAddress);
+            if (deployFarming) {
+                console.log(
+                    "Transferring default reward tokens validator ownership"
+                );
+                await defaultRewardTokensValidator.transferOwnership(
+                    ownerAddress
+                );
 
-            console.log(
-                "Transferring default stakable token validator ownership"
-            );
-            await defaultStakableTokenValidator.transferOwnership(ownerAddress);
+                console.log(
+                    "Transferring default stakable token validator ownership"
+                );
+                await defaultStakableTokenValidator.transferOwnership(
+                    ownerAddress
+                );
 
-            console.log(
-                "Transferring ERC20 staking rewards distribution factory validator ownership"
-            );
-            await stakingRewardsFactory.transferOwnership(ownerAddress);
+                console.log(
+                    "Transferring ERC20 staking rewards distribution factory validator ownership"
+                );
+                await stakingRewardsFactory.transferOwnership(ownerAddress);
+            }
 
             console.log(
                 "Full ownership correctly transferred to the specified owner address"
@@ -174,15 +192,18 @@ task(
         console.log();
         console.log(`== Periphery ==`);
         console.log(`Router deployed at address ${router.address}`);
-        console.log();
-        console.log(`== Staking rewards distribution factory ==`);
-        console.log(
-            `Reward tokens validator deployed at address ${defaultRewardTokensValidator.address}`
-        );
-        console.log(
-            `Stakable token validator deployed at address ${defaultStakableTokenValidator.address}`
-        );
-        console.log(
-            `Factory deployed at address ${stakingRewardsFactory.address}`
-        );
+
+        if (deployFarming) {
+            console.log();
+            console.log(`== Staking rewards distribution factory ==`);
+            console.log(
+                `Reward tokens validator deployed at address ${defaultRewardTokensValidator.address}`
+            );
+            console.log(
+                `Stakable token validator deployed at address ${defaultStakableTokenValidator.address}`
+            );
+            console.log(
+                `Factory deployed at address ${stakingRewardsFactory.address}`
+            );
+        }
     });
