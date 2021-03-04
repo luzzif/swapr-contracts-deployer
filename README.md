@@ -52,3 +52,4 @@ The following parameters are required for the command to work as expected:
 - `--owner-address`: An address that will become the owner of the contracts
   after deployment. If not specified, the account generated from the passed in
   private key (i.e. the deployer) will be the owner.
+- `--deploy-farming`: Whether or not to deploy the farming-related contracts.
