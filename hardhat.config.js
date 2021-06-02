@@ -1,5 +1,4 @@
 require("dotenv").config();
-
 require("@nomiclabs/hardhat-truffle5");
 require("./tasks/deploy");
 
@@ -8,8 +7,8 @@ require("./tasks/deploy");
  */
 module.exports = {
     networks: {
-        arbitrumTestnetV3: {
-            url: "https://kovan3.arbitrum.io/rpc",
+        arbitrumTestnetV4: {
+            url: "https://kovan4.arbitrum.io/rpc",
             accounts: [process.env.PRIVATE_KEY],
             gasPrice: 0,
             gas: 1000000000,
