@@ -11,10 +11,7 @@
         "lint:prettier": "prettier -l tasks/*.js",
         "lint:commit-message": "commitlint -e",
         "lint": "yarn lint:eslint && yarn lint:prettier",
-        "prepare:core": "mkdirp artifacts && cp dxswap-core/build/*.json artifacts",
-        "prepare:periphery": "mkdirp artifacts && cp dxswap-periphery/build/*.json artifacts",
-        "prepare:staking": "mkdirp artifacts && cp swapr-staking-rewards-distribution-contracts/build/*.json artifacts",
-        "deploy": "yarn prepare:core && yarn prepare:periphery && yarn prepare:staking && hardhat deploy"
+        "deploy": "hardhat deploy"
     },
     "devDependencies": {
         "@commitlint/cli": "^11.0.0",
