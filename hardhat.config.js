@@ -21,6 +21,12 @@ module.exports = {
             gasPrice: 0,
             timeout: 100000,
         },
+        arbitrumRinkebyTestnet: {
+            url: "https://rinkeby.arbitrum.io/rpc",
+            accounts: [process.env.PRIVATE_KEY],
+            gasPrice: 0,
+            timeout: 100000,
+        },
         sokol: {
             url: "https://sokol.poa.network",
             accounts: [process.env.PRIVATE_KEY],
