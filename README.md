@@ -35,21 +35,10 @@ yarn deploy
 The following parameters are required for the command to work as expected:
 
 - `--network`: specifies the network on which you want to perform the
-  deployment. Valid values are listed in the `hardhat.config.js`.
-- `--protocol-fee-native-asset-receiver`: the address that will receive the
-  protocol fee, after it's been converted to the chain's native asset (ETH,
-  xDAI, etc).
-- `--protocol-fee-fallback-receiver`: The address that will receive the protocol
-  fee when it cannot be converted to the chain's native asset.
-- `--token-registry-address`: the address of the token registry used on Swapr.
-  Check [this link](https://github.com/nicoelzer/dxDAO-Token-Registry) out for
-  more info.
-- `--token-registry-list-id`: the unique identifier of the token list,
-  registered in the previously passed token registry instance, that will be used
-  by the staking contracts to perform input validation.
+  deployment. Valid values are listed in `hardhat.config.js`.
 - `--native-asset-wrapper-address`: the address of the contract that wraps the
   native asset in the target chain.
 - `--owner-address`: An address that will become the owner of the contracts
   after deployment. If not specified, the account generated from the passed in
-  private key (i.e. the deployer) will be the owner.
-- `--deploy-farming`: Whether or not to deploy the farming-related contracts.
+  private key (i.e. the deployer) will be the owner. This contract will also get
+  all accrued fees (both denominated in native asset, and exotic currencies).
